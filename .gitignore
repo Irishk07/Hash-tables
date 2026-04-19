@@ -1,0 +1,8 @@
+analyze
+build/
+input/
+search/
+pgo_data/
+times/
+valgrind/
+hash
