@@ -8,7 +8,9 @@ int SizeOfText(const char *filename);
 
 status Read(about_text *text, const char* filename);
 
-void Fragmentation(about_text *text);
+status Fragmentation(about_text *text);
+
+void TextDtor(about_text* text);
 
 
 #endif //READ_H_

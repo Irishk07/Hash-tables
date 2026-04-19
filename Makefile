@@ -13,7 +13,7 @@ CPPFLAGS := -DNDEBUG -ggdb3 -std=c++17 -march=native -Wall -Wextra -Weffc++ -Wag
 SANITIZER_FLAGS := -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,$\
 null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
-#CPPFLAGS += $(SANITIZER_FLAGS)
+CPPFLAGS += $(SANITIZER_FLAGS)
 
 AS = nasm
 ASFLAGS = -f elf64 -g
@@ -31,7 +31,7 @@ all: hash
 
 .PHONY: base_O0
 base_O0: 
-	@$(MAKE) hash HTSRC=ht.cpp CPPFLAGS="$(CPPFLAGS) -O0 -DOUT_FILE='\"times/base_O5.txt\"'"
+	@$(MAKE) hash HTSRC=ht.cpp CPPFLAGS="$(CPPFLAGS) -O0 -DOUT_FILE='\"times/base_O0.txt\"'"
 
 .PHONY: base_O3
 base_O3: 

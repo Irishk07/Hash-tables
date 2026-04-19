@@ -33,15 +33,25 @@ int main(int argc, char** argv) {
         search_file = argv[2];
 
     about_text input_text = {};
-    Read(&input_text, input_file);
-    Fragmentation(&input_text); 
+    if (Read(&input_text, input_file) != SUCCESS || Fragmentation(&input_text) != SUCCESS) {
+        TextDtor(&input_text);
+        return 1;
+    }    
     about_text search_text = {};
-    Read(&search_text, search_file);
-    Fragmentation(&search_text); 
+    if (Read(&search_text, search_file) != SUCCESS || Fragmentation(&search_text) != SUCCESS) {
+        TextDtor(&input_text); TextDtor(&search_text);
+        return 1;
+    }
 
-    chain_table_t* hash_table = ChainInit(START_CAPACITY, LOAD_FACTOR);
-    for (int i = 0; i < input_text.cnt_words; ++i)
-        ChainInsert(hash_table, &input_text.pointers_on_words[i]);
+    // printf("cnt input words: %d\n", input_text.cnt_words);
+    // printf("cnt search words: %d * 10 = %d\n", search_text.cnt_words, search_text.cnt_words * 10);
+
+    status status_of_work = SUCCESS;
+    chain_table_t* hash_table = ChainInit(START_CAPACITY, LOAD_FACTOR, &status_of_work);
+    for (int i = 0; i < input_text.cnt_words; ++i){
+        if (ChainInsert(hash_table, &input_text.pointers_on_words[i]) != SUCCESS)
+            return 1;
+    }    
 
     for (int j = 0; j < 2; ++j) {
         for (int i = 0; i < search_text.cnt_words; ++i)
@@ -65,8 +75,12 @@ int main(int argc, char** argv) {
     unsigned long long res_time = 0;
     for (int i = 1; i < CNT_REPEATS - 1; ++i) 
         res_time += times[i];
-    unsigned long long avg_time = res_time / (CNT_REPEATS - 2);
-    printf("Time: %llu ticks\n", avg_time);
+
+    unsigned long long avg_time = 0;     
+    if (CNT_REPEATS > 1) {
+        avg_time = res_time / (CNT_REPEATS - 2);
+        printf("Time: %llu ticks\n", avg_time);
+    }
 
     #ifdef OUT_FILE
         FILE* file = fopen(OUT_FILE, "w");
@@ -80,12 +94,8 @@ int main(int argc, char** argv) {
 
     ChainFree(hash_table);
 
-    free(input_text.buffer);
-    free(input_text.aligned_buffer);
-    free(input_text.pointers_on_words);
-    free(search_text.buffer);
-    free(search_text.aligned_buffer);
-    free(search_text.pointers_on_words);
+    TextDtor(&input_text);
+    TextDtor(&search_text);
 
     return 0;
 }

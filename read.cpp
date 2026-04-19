@@ -87,19 +87,24 @@ status Read(about_text *text, const char* filename) {
     return SUCCESS;
 }
 
-void Fragmentation(about_text *text) {
+status Fragmentation(about_text *text) {
     assert(text->buffer != NULL);
 
     size_t cell_size = 64; 
     text->aligned_buffer = (char*)aligned_alloc(32, (size_t)text->cnt_words * cell_size);
-    assert(text->aligned_buffer != NULL);
+    if (text->aligned_buffer == NULL)
+        return NOT_ENOUGH_MEMORY;
     memset(text->aligned_buffer, 0, (size_t)text->cnt_words * cell_size);
 
     text->pointers_on_words = (about_word*)calloc((size_t)text->cnt_words, sizeof(about_word));
+    if (text->pointers_on_words == NULL) {
+        free(text->aligned_buffer);
+
+        return NOT_ENOUGH_MEMORY;
+    }
 
     char* temp = text->buffer; 
-
-    for (int i = 0; i < text->cnt_words; i++) {
+    for (int i = 0; i < text->cnt_words; ++i) {
         SkipSpaces(&temp);
         if (*temp == '\0') 
             break;
@@ -120,4 +125,15 @@ void Fragmentation(about_text *text) {
 
         temp += len;
     }
+
+    return SUCCESS;
+}
+
+void TextDtor(about_text* text) {
+    if (text == NULL) 
+        return;
+
+    free(text->aligned_buffer);
+    free(text->buffer);
+    free(text->pointers_on_words);
 }

@@ -9,6 +9,12 @@ sudo nice -n -20 taskset -c 0 ./hash
 ![htop_2](scrins/htop_2.png)
 
 
+```
+cnt input words: 1165861
+cnt search words: 5131469 * 10 = 51314690
+```
+
+
 # base_O0
 
 1: $21644574432$ \
@@ -43,6 +49,14 @@ Avg: $17708934875$
 ![base_5](scrins/base3_5.png)
 
 
+Func Name            | Self (%)     | Instructions per call |  
+---------------------|--------------|-----------------------|
+ChainSearch          | 35.26        | 155                   | 
+HashCrc32            | 34.06        | 63                    | 
+Strlen               | -            | -                     | 
+Strcmp               | 13.35        | 20                    | 
+
+
 # crc32
 
 1: $15468634388$ \
@@ -70,6 +84,14 @@ Avg: $15538021159$
 ![crc32_6](scrins/crc32_6.png)
 
 ![crc32_7](scrins/crc32_7.png)
+
+
+Func Name            | Self (%)     | Instructions per call |  
+---------------------|--------------|-----------------------|
+ChainSearch          | 38.41        | 147                   | 
+HashCrc32            | 22.18        | 53                    | 
+Strlen               | 7.84         | 14                    | 
+Strcmp               | 13.44        | 20                    | 
 
 
 # strlen
@@ -101,6 +123,14 @@ Avg: $15403308733$
 ![strlen_7](scrins/strlen_7.png)
 
 
+Func Name            | Self (%)     | Instructions per call |  
+---------------------|--------------|-----------------------|
+ChainSearch          | 38.96        | 137                   | 
+HashCrc32            | 22.92        | 46                    | 
+Strlen               | 4.75         | 8                     | 
+Strcmp               | 14.24        | 20                    | 
+
+
 # strcmp
 
 1: $15300917415$ \
@@ -130,6 +160,14 @@ Avg: $15368336630$
 ![strcmp_7](scrins/strcmp_7.png)
 
 
+Func Name            | Self (%)     | Instructions per call |  
+---------------------|--------------|-----------------------|
+ChainSearch          | 38.46        | 136                   | 
+HashCrc32            | 23.00        | 46                    | 
+Strlen               | 4.77         | 8                     | 
+Strcmp               | 14.60        | 20                    | 
+
+
 # pgo
 
 1: $15724697484$ \
@@ -139,6 +177,20 @@ Avg: $15368336630$
 Avg: $15717501697$
 
 Ускорение: на $12.67$ процента
+
+![pgo](scrins/pgo.png)
+
+![pgo_1](scrins/pgo_1.png)
+
+![pgo_2](scrins/pgo_2.png)
+
+
+Func Name            | Self (%)     | Instructions per call |  
+---------------------|--------------|-----------------------|
+ChainSearch          | 65.93        | 141                   | 
+HashCrc32            | -            | -                     | 
+Strlen               | -            | -                     | 
+Strcmp               | 14.58        | 20                    | 
 
 
 # Таблица результатов

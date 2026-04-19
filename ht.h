@@ -20,11 +20,11 @@ struct chain_table_t {
 };
 
 
-chain_table_t* ChainInit(int capacity, float max_load_factor);
+chain_table_t* ChainInit(int capacity, float max_load_factor, status* status_of_work);
 
-void ChainInsert(chain_table_t* hash_table, about_word* key);
+status ChainInsert(chain_table_t* hash_table, about_word* key);
 
-void ChainRehash(chain_table_t* hash_table);
+status ChainRehash(chain_table_t* hash_table);
 
 bool ChainSearch(chain_table_t* hash_table, about_word* key);
 

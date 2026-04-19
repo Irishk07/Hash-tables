@@ -32,7 +32,7 @@ static unsigned int HashCrc32(const char* str, int capacity) {
     return (unsigned int)hash % (unsigned int)capacity;
 }
 
-__attribute__((noinline)) static int My_strcmp(const char* str1, const char* str2) {
+static int My_strcmp(const char* str1, const char* str2) {
     if (str1 == NULL || str2 == NULL) 
         return 1;
 
@@ -79,10 +79,15 @@ __attribute__((noinline)) static int My_strcmp(const char* str1, const char* str
     return result;
 }
 
-static chain_node_t* CreateNode(about_word* key) {
+static chain_node_t* CreateNode(about_word* key, status* status_of_work) {
     assert(key);
 
     chain_node_t* new_node = (chain_node_t*)calloc(1, sizeof(chain_node_t));
+    if (new_node == NULL) {
+        *status_of_work = NOT_ENOUGH_MEMORY;
+
+        return NULL;
+    }
 
     new_node->key = key;
     new_node->next = NULL;
@@ -90,14 +95,18 @@ static chain_node_t* CreateNode(about_word* key) {
     return new_node;
 }
 
-chain_table_t* ChainInit(int capacity, float max_load_factor) {
+chain_table_t* ChainInit(int capacity, float max_load_factor, status* status_of_work) {
     chain_table_t* hash_table = (chain_table_t*)calloc(1, sizeof(chain_table_t));
-    if (hash_table == NULL) 
+    if (hash_table == NULL) {
+        *status_of_work = NOT_ENOUGH_MEMORY;
+
         return NULL;
+    }
 
     hash_table->table = (chain_node_t**)calloc((size_t)capacity, sizeof(chain_node_t*));
     if (hash_table->table == NULL) {
         free(hash_table);
+        *status_of_work = NOT_ENOUGH_MEMORY;
 
         return NULL;
     }
@@ -109,32 +118,41 @@ chain_table_t* ChainInit(int capacity, float max_load_factor) {
     return hash_table;
 }
 
-void ChainInsert(chain_table_t* hash_table, about_word* key) {
+status ChainInsert(chain_table_t* hash_table, about_word* key) {
     assert(hash_table);
     assert(hash_table->table);
     assert(key);
 
-    if ((float)hash_table->size / (float)hash_table->capacity >= hash_table->max_load_factor) 
-        ChainRehash(hash_table);
+    if ((float)hash_table->size / (float)hash_table->capacity >= hash_table->max_load_factor) {
+        status status_rehash = ChainRehash(hash_table);
+        if (status_rehash != SUCCESS)
+            return status_rehash;
+    }
     
     unsigned int index = HashCrc32(key->point, hash_table->capacity);
 
     chain_node_t* cur_node = hash_table->table[index];
     while (cur_node != NULL) {
         if (cur_node->key->size == key->size && My_strcmp(cur_node->key->point, key->point) == 0)
-            return;
+            return SUCCESS;
 
         cur_node = cur_node->next;
     }
 
-    chain_node_t* new_node = CreateNode(key);
+    status status_of_work = SUCCESS;
+    chain_node_t* new_node = CreateNode(key, &status_of_work);
+    if (new_node == NULL)
+        return status_of_work;
+
     new_node->next = hash_table->table[index];
     hash_table->table[index] = new_node;
     hash_table->size++;
+
+    return SUCCESS;
 }
 
 
-void ChainRehash(chain_table_t* hash_table) {
+status ChainRehash(chain_table_t* hash_table) {
     assert(hash_table);
     assert(hash_table->table); 
 
@@ -144,13 +162,19 @@ void ChainRehash(chain_table_t* hash_table) {
     hash_table->capacity *= 2;
     hash_table->table = (chain_node_t**)calloc((size_t)hash_table->capacity, sizeof(chain_node_t*));
     if (hash_table->table == NULL)
-        return;
+        return NOT_ENOUGH_MEMORY;
     hash_table->size = 0;
 
     for (int i = 0; i < old_capacity; ++i) {
         chain_node_t* cur_node = old_table[i];
         while (cur_node != NULL) {
-            ChainInsert(hash_table, cur_node->key);
+            status status_rehash = ChainInsert(hash_table, cur_node->key);
+            if (status_rehash != SUCCESS){
+                free(hash_table->table);
+                hash_table->table = old_table;
+
+                return status_rehash;
+            } 
 
             chain_node_t* temp = cur_node;
             cur_node = cur_node->next;
@@ -159,6 +183,8 @@ void ChainRehash(chain_table_t* hash_table) {
     }
 
     free(old_table);
+
+    return SUCCESS;
 }
 
 bool ChainSearch(chain_table_t* hash_table, about_word* key) {
