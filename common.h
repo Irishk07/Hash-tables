@@ -3,6 +3,12 @@
 
 #include <stdio.h>
 
+#ifdef IF_NOINLINE
+#define INLINE inline __attribute__((noinline))
+#else // IF_NOINLINE
+#define INLINE
+#endif // IF_NOINLINE
+
 
 const float LOAD_FACTOR  = 10.0;
 const int START_CAPACITY = 1024;

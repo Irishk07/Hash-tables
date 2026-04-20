@@ -10,7 +10,7 @@
 #include "common.h"
 
 
-static unsigned int HashCrc32(const char* key, int capacity) {
+INLINE static unsigned int HashCrc32(const char* key, int capacity) {
     assert(key);
 
     uint32_t crc = 0xFFFFFFFF;

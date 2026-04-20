@@ -6,3 +6,4 @@ pgo_data/
 times/
 valgrind/
 hash
+callgrind*

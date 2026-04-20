@@ -38,7 +38,11 @@ Avg: $17708934875$
 
 ![base](scrins/base3.png)
 
+![base_0](scrins/base3_0.png)
+
 ![base_1](scrins/base3_1.png)
+
+![base_6](scrins/base3_6.png)
 
 ![base_2](scrins/base3_2.png)
 
@@ -47,6 +51,7 @@ Avg: $17708934875$
 ![base_4](scrins/base3_4.png)
 
 ![base_5](scrins/base3_5.png)
+
 
 
 Func Name            | Self (%)     | Instructions per call |  
@@ -71,7 +76,11 @@ Avg: $15538021159$
 
 ![crc32](scrins/crc32.png)
 
+![crc32_0](scrins/crc32_0.png)
+
 ![crc32_1](scrins/crc32_1.png)
+
+![crc32_8](scrins/crc32_8.png)
 
 ![crc32_2](scrins/crc32_2.png)
 
@@ -108,7 +117,11 @@ Avg: $15403308733$
 
 ![strlen](scrins/strlen.png)
 
+![strlen_0](scrins/strlen_0.png)
+
 ![strlen_1](scrins/strlen_1.png)
+
+![strlen_8](scrins/strlen_8.png)
 
 ![strlen_2](scrins/strlen_2.png)
 
@@ -145,7 +158,11 @@ Avg: $15368336630$
 
 ![strcmp](scrins/strcmp.png)
 
+![strcmp_0](scrins/strcmp_0.png)
+
 ![strcmp_1](scrins/strcmp_1.png)
+
+![strcmp_8](scrins/strcmp_8.png)
 
 ![strcmp_2](scrins/strcmp_2.png)
 
@@ -180,6 +197,8 @@ Avg: $15717501697$
 
 ![pgo](scrins/pgo.png)
 
+![pgo_0](scrins/pgo_0.png)
+
 ![pgo_1](scrins/pgo_1.png)
 
 ![pgo_2](scrins/pgo_2.png)
@@ -203,3 +222,5 @@ base_O3              | 1.57e+10        | 2.87e+06        | 0.02%
 crc32                | 1.55e+10        | 5.35e+07        | 0.34%
 strlen               | 1.54e+10        | 6.01e+07        | 0.39%
 strcmp               | 1.57e+10        | 7.94e+06        | 0.05%
+
+![graphic](graphic.png)

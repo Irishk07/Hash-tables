@@ -11,7 +11,7 @@
 #include "common.h"
 
 
-static unsigned int HashCrc32(const char* str, int capacity) {
+INLINE static unsigned int HashCrc32(const char* str, int capacity) {
     assert(str);
 
     unsigned long long hash = 0xFFFFFFFF;

@@ -10,7 +10,7 @@ CPPFLAGS := -DNDEBUG -ggdb3 -std=c++17 -march=native -Wall -Wextra -Weffc++ -Wag
 -Wno-narrowing -Wno-old-style-cast -Wno-varargs -fcheck-new -fsized-deallocation -fstack-protector \
 -fstrict-overflow -flto-odr-type-merging -fno-omit-frame-pointer -Wlarger-than=90000 -Wstack-usage=81920 -pie -fPIE -Werror=vla
 
-SANITIZER_FLAGS := -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,$\
+#SANITIZER_FLAGS := -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,$\
 null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
 CPPFLAGS += $(SANITIZER_FLAGS)
@@ -51,8 +51,8 @@ strlen:
 
 .PHONY: valgrind
 valgrind: 
-	@$(MAKE) hash HTSRC=$(HTSRC) CPPFLAGS="$(CPPFLAGS) -g -O3 -DVALGRIND -mno-avx512f"
-	valgrind --tool=callgrind --dump-instr=yes --collect-jumps=yes ./hash
+	@$(MAKE) hash HTSRC=$(HTSRC) CPPFLAGS="$(CPPFLAGS) -g -O3 -DVALGRIND -DIF_NOINLINE -mno-avx512f"
+	valgrind --tool=callgrind --simulate-cache=yes --simulate-hwpref=yes --dump-instr=yes --collect-jumps=yes ./hash
 
 .PHONY: pgo
 pgo: 

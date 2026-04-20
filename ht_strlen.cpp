@@ -11,10 +11,10 @@
 #include "common.h"
 
 
-extern "C" size_t My_strlen(const char* str);
+extern "C" INLINE size_t My_strlen(const char* str);
 
 
-static unsigned int HashCrc32(const char* str, int capacity) {
+INLINE static unsigned int HashCrc32(const char* str, int capacity) {
     assert(str);
 
     unsigned long long hash = 0xFFFFFFFF;

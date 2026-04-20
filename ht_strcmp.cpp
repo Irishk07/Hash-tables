@@ -11,10 +11,10 @@
 #include "common.h"
 
 
-extern "C" size_t My_strlen(const char* str);
+extern "C" INLINE size_t My_strlen(const char* str);
 
 
-static unsigned int HashCrc32(const char* str, int capacity) {
+INLINE static unsigned int HashCrc32(const char* str, int capacity) {
     assert(str);
 
     unsigned long long hash = 0xFFFFFFFF;
@@ -32,7 +32,7 @@ static unsigned int HashCrc32(const char* str, int capacity) {
     return (unsigned int)hash % (unsigned int)capacity;
 }
 
-static int My_strcmp(const char* str1, const char* str2) {
+INLINE static int My_strcmp(const char* str1, const char* str2) {
     if (str1 == NULL || str2 == NULL) 
         return 1;
 
