@@ -9,6 +9,14 @@
 #define INLINE
 #endif // IF_NOINLINE
 
+#ifdef VALGRIND
+const int CNT_REPEATS = 1;
+#else // VALGRIND
+const int CNT_REPEATS = 5;
+#endif // VALGRIND
+
+const int CNT_TESTS = 10;
+
 
 const float LOAD_FACTOR  = 10.0;
 const int START_CAPACITY = 1024;

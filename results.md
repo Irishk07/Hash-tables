@@ -95,6 +95,49 @@ Avg: $15538021159$
 ![crc32_7](scrins/crc32_7.png)
 
 
+
+Было:
+```
+while (*key != '\0')
+    crc = (crc << 8) ^ crc32_table[((crc >> 24) ^ (uint8_t)*key++) & 0xFF];
+```
+
+В годболте:
+```
+mov     ecx, eax
+shr     eax, 24
+add     rdi, 1
+xor     edx, eax
+sal     ecx, 8
+movzx   edx, dl
+mov     eax, DWORD PTR crc32_table[0+rdx*4]
+movzx   edx, BYTE PTR [rdi]
+xor     eax, ecx
+test    dl, dl
+jne     .L5
+```
+
+
+Использовала интрисики:
+```
+size_t i = 0;
+for (; i + 8 <= len; i += 8) {
+    unsigned long long cur_ptr = *(const unsigned long long*)(str + i);
+    hash = _mm_crc32_u64(hash, cur_ptr);
+}
+```
+
+В годболте это преобразовалось в:
+```
+crc32   rcx, QWORD PTR [rbx-8+rax]
+mov     rdx, rax
+lea     rax, [rax+8]
+cmp     rsi, rax
+jnb     .L4
+mov     eax, ecx
+```
+
+
 Func Name            | Self (%)     | Instructions per call |  
 ---------------------|--------------|-----------------------|
 ChainSearch          | 38.41        | 147                   | 

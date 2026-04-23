@@ -8,14 +8,6 @@
 #include "ht.h"
 #include "read.h"
 
-#ifdef VALGRIND
-const int CNT_REPEATS = 1;
-#else // VALGRIND
-const int CNT_REPEATS = 5;
-#endif // VALGRIND
-
-const int CNT_TESTS = 10;
-
 
 static int Comparator(const void* a, const void* b) {
     unsigned long long val1 = *(const unsigned long long*)a;
@@ -43,11 +35,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // printf("cnt input words: %d\n", input_text.cnt_words);
-    // printf("cnt search words: %d * 10 = %d\n", search_text.cnt_words, search_text.cnt_words * 10);
-
     status status_of_work = SUCCESS;
-    chain_table_t* hash_table = ChainInit(START_CAPACITY, LOAD_FACTOR, &status_of_work);
+    chain_table_t* hash_table = ChainInit(START_CAPACITY, LOAD_FACTOR, HashCrc32, &status_of_work);
     for (int i = 0; i < input_text.cnt_words; ++i){
         if (ChainInsert(hash_table, &input_text.pointers_on_words[i]) != SUCCESS)
             return 1;

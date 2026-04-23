@@ -7,6 +7,9 @@
 #include "common.h"
 
 
+typedef unsigned int (*hash_func_t)(const char* key, int capacity);
+
+
 struct chain_node_t{
     about_word* key;
     struct chain_node_t* next;
@@ -17,10 +20,11 @@ struct chain_table_t {
     int size;
     int capacity;
     float max_load_factor;
+    hash_func_t hash_func;
 };
 
 
-chain_table_t* ChainInit(int capacity, float max_load_factor, status* status_of_work);
+chain_table_t* ChainInit(int capacity, float max_load_factor, hash_func_t hash_func, status* status_of_work);
 
 status ChainInsert(chain_table_t* hash_table, about_word* key);
 
@@ -29,6 +33,8 @@ status ChainRehash(chain_table_t* hash_table);
 bool ChainSearch(chain_table_t* hash_table, about_word* key);
 
 void ChainFree(chain_table_t* hash_table);
+
+INLINE unsigned int HashCrc32(const char* str, int capacity);
 
 
 static const unsigned int crc32_table[] = {
