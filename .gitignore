@@ -7,3 +7,4 @@ times/
 valgrind/
 hash
 callgrind*
+val*

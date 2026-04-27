@@ -11,23 +11,32 @@
 #include "common.h"
 
 
-INLINE unsigned int HashCrc32(const char* str, int capacity) {
+#define HASH_CRC32_64_BITS(num)             \
+    hash = _mm_crc32_u64(hash, data[num]);
+
+INLINE static unsigned int HashCrc32(const char* str, int capacity) {
     assert(str);
 
     unsigned long long hash = 0xFFFFFFFF;
-    size_t len = strlen(str);
+    int len = strlen(str);
+    const unsigned long long* data = (const unsigned long long*)str;
 
-    size_t i = 0;
-    for (; i + 8 <= len; i += 8) {
-        unsigned long long cur_ptr = *(const unsigned long long*)(str + i);
-        hash = _mm_crc32_u64(hash, cur_ptr);
+    HASH_CRC32_64_BITS(0);
+    HASH_CRC32_64_BITS(1);
+    HASH_CRC32_64_BITS(2);
+    HASH_CRC32_64_BITS(3);
+
+    if (len > 31) {
+        HASH_CRC32_64_BITS(4);
+        HASH_CRC32_64_BITS(5);
+        HASH_CRC32_64_BITS(6);
+        HASH_CRC32_64_BITS(7);
     }
-
-    for (; i < len; ++i)
-        hash = _mm_crc32_u8((unsigned int)hash, (unsigned char)str[i]);
 
     return (unsigned int)hash % (unsigned int)capacity;
 }
+
+#undef HASH_CRC32_64_BITS
 
 
 static chain_node_t* CreateNode(about_word* key, status* status_of_work) {
@@ -65,7 +74,9 @@ chain_table_t* ChainInit(int capacity, float max_load_factor, hash_func_t hash_f
     hash_table->capacity = capacity;
     hash_table->size     = 0;
     hash_table->max_load_factor = max_load_factor;
-    hash_table->hash_func = hash_func;
+    
+    if (hash_func == NULL) hash_table->hash_func = HashCrc32;
+    else                   hash_table->hash_func = hash_func;
     
     return hash_table;
 }
@@ -81,7 +92,7 @@ status ChainInsert(chain_table_t* hash_table, about_word* key) {
             return status_rehash;
     }
     
-    unsigned int index = hash_table->hash_func(key->point, hash_table->capacity) % (unsigned int) hash_table->capacity;
+    unsigned int index = hash_table->hash_func(key->point, hash_table->capacity);
 
     chain_node_t* cur_node = hash_table->table[index];
     while (cur_node != NULL) {
@@ -143,7 +154,7 @@ bool ChainSearch(chain_table_t* hash_table, about_word* key) {
     assert(hash_table);
     assert(hash_table->table);
 
-    unsigned int index = hash_table->hash_func(key->point, hash_table->capacity) % (unsigned int) hash_table->capacity;
+    unsigned int index = hash_table->hash_func(key->point, hash_table->capacity);
     chain_node_t* cur_node = hash_table->table[index];
     while (cur_node != NULL) {
         if (cur_node->key->size == key->size && strcmp(cur_node->key->point, key->point) == 0) 

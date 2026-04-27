@@ -2,9 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 labels = ['Base_O0', 'Base_O3', 'crc32', 'strlen', 'strcmp', 'pgo']
-full_time = [21.707, 17.709, 15.54, 15.403, 15.37, 15.72]
+full_time = [23.058, 17.566, 15.603, 15.45, 15.403, 15.72]
 
 x = np.arange(len(labels))
+width = 0.6
 
 fig, ax = plt.subplots(figsize=(12, 7), dpi=300)
 
@@ -16,7 +17,7 @@ ax.set_xticks(x)
 ax.set_xticklabels(labels)
 ax.legend()
 
-ax.bar_label(rects1, padding=3)
+ax.bar_label(rects1, padding=3, fmt='%.3f')
 
 fig.tight_layout()
 plt.savefig("graphic.png")

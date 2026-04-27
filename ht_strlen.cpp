@@ -11,25 +11,78 @@
 #include "common.h"
 
 
-extern "C" INLINE size_t My_strlen(const char* str);
+extern "C" size_t My_strlen(const char* str);
 
 
-INLINE unsigned int HashCrc32(const char* str, int capacity) {
+#define HASH_CRC32_64_BITS(num)             \
+    hash = _mm_crc32_u64(hash, data[num]);
+
+INLINE static unsigned int HashCrc32(const char* str, int capacity) {
     assert(str);
 
     unsigned long long hash = 0xFFFFFFFF;
-    size_t len = My_strlen(str);
+    int len = My_strlen(str);
+    const unsigned long long* data = (const unsigned long long*)str;
 
-    size_t i = 0;
-    for (; i + 8 <= len; i += 8) {
-        unsigned long long cur_ptr = *(const unsigned long long*)(str + i);
-        hash = _mm_crc32_u64(hash, cur_ptr);
+    HASH_CRC32_64_BITS(0);
+    HASH_CRC32_64_BITS(1);
+    HASH_CRC32_64_BITS(2);
+    HASH_CRC32_64_BITS(3);
+
+    if (len > 31) {
+        HASH_CRC32_64_BITS(4);
+        HASH_CRC32_64_BITS(5);
+        HASH_CRC32_64_BITS(6);
+        HASH_CRC32_64_BITS(7);
     }
 
-    for (; i < len; ++i)
-        hash = _mm_crc32_u8((unsigned int)hash, (unsigned char)str[i]);
-
     return (unsigned int)hash % (unsigned int)capacity;
+}
+
+#undef HASH_CRC32_64_BITS
+
+INLINE static int My_strcmp(const char* str1, const char* str2) {
+    if (str1 == NULL || str2 == NULL) 
+        return 1;
+
+    int result = 0;
+
+    asm volatile (
+        ".intel_syntax noprefix           \n\t"
+        
+        "mov al, [%[s1]]                  \n\t"     // check first bytes
+        "cmp al, [%[s2]]                  \n\t"
+        "jne 2f                           \n\t"
+
+        "vmovdqa ymm0, [%[s1]]            \n\t"     // mov ymm0, 32 bytes of str1
+        "vpcmpeqb ymm0, ymm0, [%[s2]]     \n\t"     // ymm0 = compare of ymm0 and 32 bytes of str2
+        "vpmovmskb eax, ymm0              \n\t"     // make mask
+        
+        "xor %[res], %[res]               \n\t" 
+        "cmp eax, -1                      \n\t"     // cmp with FFFFFFFF (equal)
+        "jne 2f                           \n\t" 
+
+        "vmovdqa ymm1, [%[s1] + 32]       \n\t"
+        "vpcmpeqb ymm1, ymm1, [%[s2] + 32]\n\t"
+        "vpmovmskb eax, ymm1              \n\t"
+        
+        "cmp eax, -1                      \n\t"
+        "je 1f                            \n\t"
+
+        "2:                               \n\t" 
+        "mov %[res], 1                    \n\t" 
+
+        "1:                               \n\t"
+        "vzeroupper                       \n\t"
+        ".att_syntax                      \n\t"
+
+        : [res] "=&r" (result)                      // exit args (& uniq) (= only write)                            
+        : [s1]  "r"   (str1),                       // enter args (r any reg)                        
+          [s2]  "r"   (str2)
+        : "ymm0", "rax", "cc", "memory"             // destroyed
+    );
+
+    return result;
 }
 
 static chain_node_t* CreateNode(about_word* key, status* status_of_work) {
@@ -67,7 +120,9 @@ chain_table_t* ChainInit(int capacity, float max_load_factor, hash_func_t hash_f
     hash_table->capacity = capacity;
     hash_table->size     = 0;
     hash_table->max_load_factor = max_load_factor;
-    hash_table->hash_func = hash_func;
+    
+    if (hash_func == NULL) hash_table->hash_func = HashCrc32;
+    else                   hash_table->hash_func = hash_func;
     
     return hash_table;
 }
@@ -87,7 +142,7 @@ status ChainInsert(chain_table_t* hash_table, about_word* key) {
 
     chain_node_t* cur_node = hash_table->table[index];
     while (cur_node != NULL) {
-        if (cur_node->key->size == key->size && strcmp(cur_node->key->point, key->point) == 0)
+        if (cur_node->key->size == key->size && My_strcmp(cur_node->key->point, key->point) == 0)
             return SUCCESS;
 
         cur_node = cur_node->next;
@@ -148,7 +203,7 @@ bool ChainSearch(chain_table_t* hash_table, about_word* key) {
     unsigned int index = hash_table->hash_func(key->point, hash_table->capacity);
     chain_node_t* cur_node = hash_table->table[index];
     while (cur_node != NULL) {
-        if (cur_node->key->size == key->size && strcmp(cur_node->key->point, key->point) == 0) 
+        if (cur_node->key->size == key->size && My_strcmp(cur_node->key->point, key->point) == 0) 
             return true;
 
         cur_node = cur_node->next;

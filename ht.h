@@ -34,8 +34,6 @@ bool ChainSearch(chain_table_t* hash_table, about_word* key);
 
 void ChainFree(chain_table_t* hash_table);
 
-INLINE unsigned int HashCrc32(const char* str, int capacity);
-
 
 static const unsigned int crc32_table[] = {
   0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9,

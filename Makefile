@@ -1,6 +1,6 @@
 CXX = g++
 
-CPPFLAGS := -DNDEBUG -ggdb3 -std=c++17 -march=native -Wall -Wextra -Weffc++ -Waggressive-loop-optimizations -Wc++14-compat \
+CPPFLAGS := -DNDEBUG -ggdb3 -mno-avx512f -std=c++17 -march=native -Wall -Wextra -Weffc++ -Waggressive-loop-optimizations -Wc++14-compat \
 -Wmissing-declarations -Wcast-align -Wcast-qual -Wchar-subscripts -Wconditionally-supported -Wconversion -Wctor-dtor-privacy \
 -Wempty-body -Wfloat-equal -Wformat-nonliteral -Wformat-security -Wformat-signedness -Wformat=2 -Winline -Wlogical-op \
 -Wnon-virtual-dtor -Wopenmp-simd -Woverloaded-virtual -Wpacked -Wpointer-arith -Winit-self -Wredundant-decls -Wshadow \
@@ -21,7 +21,7 @@ ASSRC = my_strlen.s
 ASOBJ = $(ASSRC:%.s=build/%.o)
 
 HTSRC ?= ht.cpp
-CPPSRC = main.cpp read.cpp $(HTSRC)
+CPPSRC = main.cpp read.cpp str_hashes.cpp $(HTSRC)
 CPPOBJ := $(CPPSRC:%.cpp=build/%.o) 
 
 HEADER_DEPENDS := $(CPPOBJ:%.o=%.d)
@@ -51,7 +51,7 @@ strlen:
 
 .PHONY: valgrind
 valgrind: 
-	@$(MAKE) hash HTSRC=$(HTSRC) CPPFLAGS="$(CPPFLAGS) -g -O3 -DVALGRIND -DIF_NOINLINE -mno-avx512f"
+	@$(MAKE) hash HTSRC=$(HTSRC) CPPFLAGS="$(CPPFLAGS) -g -O3 -DVALGRIND -mno-avx512f"
 	valgrind --tool=callgrind --simulate-cache=yes --simulate-hwpref=yes --dump-instr=yes --collect-jumps=yes ./hash
 
 .PHONY: pgo
@@ -60,6 +60,10 @@ pgo:
 	@$(CXX) $(CPPFLAGS) -DOUT_FILE='"times/pgo.txt"' -O3 -mavx2 -fprofile-generate=pgo_data ht.cpp main.cpp read.cpp -o hash
 	./hash
 	@$(CXX) $(CPPFLAGS) -DOUT_FILE='"times/pgo.txt"' -O3 -mavx2 -fprofile-use=pgo_data -fprofile-correction ht.cpp main.cpp read.cpp -o hash
+
+.PHONY: run
+run:
+	sudo nice -n -20 taskset -c 0 ./hash
 
 build:
 	mkdir -p build

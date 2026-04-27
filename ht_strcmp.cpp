@@ -11,26 +11,32 @@
 #include "common.h"
 
 
-extern "C" INLINE size_t My_strlen(const char* str);
+#define HASH_CRC32_64_BITS(num)             \
+    hash = _mm_crc32_u64(hash, data[num]);
 
-
-INLINE unsigned int HashCrc32(const char* str, int capacity) {
+INLINE static unsigned int HashCrc32(const char* str, int capacity) {
     assert(str);
 
     unsigned long long hash = 0xFFFFFFFF;
-    size_t len = My_strlen(str);
+    int len = strlen(str);
+    const unsigned long long* data = (const unsigned long long*)str;
 
-    size_t i = 0;
-    for (; i + 8 <= len; i += 8) {
-        unsigned long long cur_ptr = *(const unsigned long long*)(str + i);
-        hash = _mm_crc32_u64(hash, cur_ptr);
+    HASH_CRC32_64_BITS(0);
+    HASH_CRC32_64_BITS(1);
+    HASH_CRC32_64_BITS(2);
+    HASH_CRC32_64_BITS(3);
+
+    if (len > 31) {
+        HASH_CRC32_64_BITS(4);
+        HASH_CRC32_64_BITS(5);
+        HASH_CRC32_64_BITS(6);
+        HASH_CRC32_64_BITS(7);
     }
-
-    for (; i < len; ++i)
-        hash = _mm_crc32_u8((unsigned int)hash, (unsigned char)str[i]);
 
     return (unsigned int)hash % (unsigned int)capacity;
 }
+
+#undef HASH_CRC32_64_BITS
 
 INLINE static int My_strcmp(const char* str1, const char* str2) {
     if (str1 == NULL || str2 == NULL) 
@@ -41,27 +47,24 @@ INLINE static int My_strcmp(const char* str1, const char* str2) {
     asm volatile (
         ".intel_syntax noprefix           \n\t"
         
-        "mov rdx, %[s1]                   \n\t" // address of str1
-        "mov rcx, %[s2]                   \n\t" // address of str2
+        "mov al, [%[s1]]                  \n\t"     // check first bytes
+        "cmp al, [%[s2]]                  \n\t"
+        "jne 2f                           \n\t"
 
-        "mov al, [rdx]                    \n\t" // check first bytes
-        "cmp al, [rcx]                    \n\t"
-        "jne 2f                           \n\t" 
-
-        "vmovdqu ymm0, [rdx]              \n\t" // mov ymm0, 32 bytes of str1
-        "vpcmpeqb ymm0, ymm0, [rcx]       \n\t" // ymm0 = compare of ymm0 and 32 bytes of str2
-        "vpmovmskb eax, ymm0              \n\t" // make mask
+        "vmovdqa ymm0, [%[s1]]            \n\t"     // mov ymm0, 32 bytes of str1
+        "vpcmpeqb ymm0, ymm0, [%[s2]]     \n\t"     // ymm0 = compare of ymm0 and 32 bytes of str2
+        "vpmovmskb eax, ymm0              \n\t"     // make mask
         
         "xor %[res], %[res]               \n\t" 
-        "cmp eax, -1                      \n\t" // cmp with FFFFFFFF (equal)
+        "cmp eax, -1                      \n\t"     // cmp with FFFFFFFF (equal)
         "jne 2f                           \n\t" 
 
-        "vmovdqu ymm1, [rdx + 32]         \n\t" // mov ymm1, next 32 bytes of str1
-        "vpcmpeqb ymm1, ymm1, [rcx + 32]  \n\t" // ymm1 = compare of ymm1 and next 32 bytes of str2
-        "vpmovmskb eax, ymm1              \n\t" // make mask
+        "vmovdqa ymm1, [%[s1] + 32]       \n\t"
+        "vpcmpeqb ymm1, ymm1, [%[s2] + 32]\n\t"
+        "vpmovmskb eax, ymm1              \n\t"
         
-        "cmp eax, -1                      \n\t" // cmp with FFFFFFFF (equal)
-        "je 1f                            \n\t" 
+        "cmp eax, -1                      \n\t"
+        "je 1f                            \n\t"
 
         "2:                               \n\t" 
         "mov %[res], 1                    \n\t" 
@@ -70,14 +73,15 @@ INLINE static int My_strcmp(const char* str1, const char* str2) {
         "vzeroupper                       \n\t"
         ".att_syntax                      \n\t"
 
-        : [res] "=&r" (result)                                  // exit args (& uniq) (= only write)
-        : [s1]  "r"   (str1),                                   // enter args (r any)
+        : [res] "=&r" (result)                      // exit args (& uniq) (= only write)                            
+        : [s1]  "r"   (str1),                       // enter args (r any reg)                        
           [s2]  "r"   (str2)
-        : "ymm0", "ymm1", "rax", "rdx", "rcx", "cc", "memory"   // destroyed
+        : "ymm0", "rax", "cc", "memory"             // destroyed
     );
 
     return result;
 }
+
 
 static chain_node_t* CreateNode(about_word* key, status* status_of_work) {
     assert(key);
@@ -114,7 +118,9 @@ chain_table_t* ChainInit(int capacity, float max_load_factor, hash_func_t hash_f
     hash_table->capacity = capacity;
     hash_table->size     = 0;
     hash_table->max_load_factor = max_load_factor;
-    hash_table->hash_func = hash_func;
+    
+    if (hash_func == NULL) hash_table->hash_func = HashCrc32;
+    else                   hash_table->hash_func = hash_func;
     
     return hash_table;
 }

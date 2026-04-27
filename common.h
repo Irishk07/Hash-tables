@@ -4,9 +4,9 @@
 #include <stdio.h>
 
 #ifdef IF_NOINLINE
-#define INLINE inline __attribute__((noinline))
+#define INLINE __attribute__((noinline))
 #else // IF_NOINLINE
-#define INLINE
+#define INLINE __attribute__((always_inline))
 #endif // IF_NOINLINE
 
 #ifdef VALGRIND

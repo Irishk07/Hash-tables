@@ -8,9 +8,10 @@
 #include "ht.h"
 
 #include "common.h"
+#include "str_hashes.h"
 
 
-INLINE unsigned int HashCrc32(const char* key, int capacity) {
+static unsigned int HashCrc32(const char* key, int capacity) {
     assert(key);
 
     uint32_t crc = 0xFFFFFFFF;
@@ -56,7 +57,9 @@ chain_table_t* ChainInit(int capacity, float max_load_factor, hash_func_t hash_f
     hash_table->capacity = capacity;
     hash_table->size     = 0;
     hash_table->max_load_factor = max_load_factor;
-    hash_table->hash_func = hash_func;
+
+    if (hash_func == NULL) hash_table->hash_func = HashCrc32;
+    else                   hash_table->hash_func = hash_func;
     
     return hash_table;
 }
