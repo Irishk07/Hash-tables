@@ -196,7 +196,7 @@ mov     rbx, QWORD PTR [rax+rdx*8]
 3. 
 ```
 while (cur_node != NULL) {
-    if (cur_node->key->size == key->size && strcmp(cur_node->key->point, key->point) == 0) 
+    if (strcmp(cur_node->key->point, key->point) == 0) 
         return true;
 
     cur_node = cur_node->next;
@@ -416,11 +416,11 @@ Strcmp               | 14.58        | 20                    |
 
 Test Name            | Average         | StdDev          | RelError  
 ---------------------|-----------------|-----------------|-----------
-base_O0              | 2.31e+10        | 1.07e+08        | 0.46%
-base_O3              | 1.76e+10        | 1.00e+08        | 0.57%
-crc32                | 1.56e+10        | 3.40e+07        | 0.22%
-strlen               | 1.54e+10        | 6.01e+07        | 0.39%
-strcmp               | 1.55e+10        | 4.21e+07        | 0.27%
-pgo                  | 1.57e+10        | 7.94e+06        | 0.05%
+base_O0              | 2.31e+10        | 0.01e+10        | 0.46%
+base_O3              | 1.76e+10        | 0.01e+10        | 0.57%
+crc32                | 1.56e+10        | 0.003e+10        | 0.22%
+strlen               | 1.54e+10        | 0.006e+10        | 0.39%
+strcmp               | 1.55e+10        | 0.004e+10        | 0.27%
+pgo                  | 1.57e+10        | 0.0008e+10        | 0.05%
 
 ![graphic](graphic.png)
